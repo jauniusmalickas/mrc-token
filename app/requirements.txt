@@ -1,3 +1,6 @@
 flask==1.0.2
 flask_httpauth
 itsdangerous
+pyYAML
+pyjwt
+datetime
