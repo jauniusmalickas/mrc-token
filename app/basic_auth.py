@@ -1,10 +1,8 @@
-# is REST-auth/blob/master/api.py
 
 import os
 from flask import Flask, current_app, abort, request, jsonify, g, url_for
-import yaml  #kol kas nenaudojame 
-import jwt
 
+import jwt
 
 
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
@@ -90,15 +88,22 @@ def get_auth_token():
 @app.route('/v1/submitCheckin', methods=['POST'])
 @token_auth.login_required
 def submitCheckin():
+
     """
     Modify an existing user.
     This endpoint requires a valid user token.
     Note: users are only allowed to modify themselves.
     """
+    print("The raw Authorization header")
+    print(request.environ["HTTP_AUTHORIZATION"])
+    print("Flask's Authorization header")
+    print(request.authorization)
+ 
+
     if g.jwt_claims['client_id'] not in users:
         abort(403)
    
-    return '', 204
+    return jsonify({'client_id': g.jwt_claims['client_id'], 'payment_type':1, 'timeout': 600}), 201
 
 @auth.error_handler
 def password_error():

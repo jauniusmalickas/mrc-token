@@ -4,3 +4,4 @@ itsdangerous
 pyYAML
 pyjwt
 datetime
+config
