@@ -19,16 +19,20 @@ users = {
     "viada": generate_password_hash("viada")
 }
 
-def get_user(client_id):
+def isUser(client_id):
     """
-    Return a user.
-    This endpoint is publicly available, but if the client has a token it
-    should send it, as that indicates to the server that the user is online.
+    Return true if  user is in db.
     """
     if client_id in users:
       return  True
     return False 
 
+def getUser(client_id):
+    """
+    Return user.
+    """
+    if client_id in users:
+      return users.get(client_id)
 
 @auth.verify_password
 def verify_pwd(client_id, secret):

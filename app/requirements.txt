@@ -1,7 +1,7 @@
 flask==1.0.2
 flask_httpauth
-itsdangerous
-pyYAML
+jwt
 pyjwt
 datetime
 config
+flask_expects_json

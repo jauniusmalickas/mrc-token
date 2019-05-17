@@ -1,10 +1,35 @@
-from flask import Flask, jsonify, current_app, g, request
+from flask import Flask, jsonify, current_app, g, request, abort
+from flask_expects_json import expects_json
 from token_auth import  generate_token, token_auth
-from basic_auth import auth, get_user
+from basic_auth import auth, isUser, getUser
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'abra kadabra'
+
+checkin = {
+    'type': 'object',
+    'properties': {
+        'mgOperationId': {'type': 'string'},
+        'spotId': {'type': 'string'},
+        'languageId': {'type': 'string'},
+        'loyaltyId' : {'type': 'string'},
+        'loyaltyNumber': {'type': 'string'}
+    },
+    'required': ['mgOperationId', 'spotId']
+}
+
+
+def to_dict (client_id): 
+    response = {}
+    if client_id == 'opay':
+        response = {
+            'errorCode': 0, 'mgOperationId': g.data['mgOperationId'], 'mode': 1,  'modeName' : 'ServiceFirst', 'checkinLifetime': 10}
+    if client_id == 'viada':
+        response = {
+            'errorCode': 0, 'mgOperationId': g.data['mgOperationId'], 'mode': 2,  'modeName' : 'PayFirst', 'checkinLifetime': 10}
+    
+    return response
 
 
 @app.before_request
@@ -14,6 +39,10 @@ def before_request():
         g.user = request.authorization['username']
         print('basic auth -> user %', g.user)
     
+        data = request.form
+        if data.get('grant_type') != 'client_credentials':
+            abort(403)
+
     if hasattr(g, 'jwt_claims') and 'client_id' in g.jwt_claims:
         g.user = g.jwt_claims['client_id']
         print('token auth -> user %', g.user)
@@ -36,6 +65,7 @@ def get_auth_token():
 
 @app.route('/v1/submitCheckin', methods=['POST'])
 @token_auth.login_required
+@expects_json(checkin)
 def submitCheckin():
 
     """
@@ -47,18 +77,21 @@ def submitCheckin():
     print(request.environ["HTTP_AUTHORIZATION"])
     print("Flask's Authorization header")
     print(request.authorization)
-   
+    
     
     print('token auth -> user %', g.jwt_claims['client_id'])
      #tbd padaryti metoda getUser is token client_id
-   
     
-    if not get_user(g.jwt_claims['client_id']):
+    print('g.data ->  s%', g.data)
+    
+    if not isUser(g.jwt_claims['client_id']):
         abort(403)
-   
-    return jsonify({'client_id': g.jwt_claims['client_id'], 'payment_type':1, 'timeout': 600}), 201
-
-
+    client_id = g.jwt_claims['client_id']
+        
+    r = jsonify(to_dict(client_id))
+    r.status_code = 202
+    
+    return r
 
 
 if __name__ == '__main__':
